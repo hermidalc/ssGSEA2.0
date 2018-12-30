@@ -3,34 +3,34 @@
 ## Created: September 09, 2017
 ## Author(s): Karsten Krug
 ##
-## Purpose: 
+## Purpose:
 ##      - Wrapper to ssGSEA script to perform single sample Gene Set Enrichment analysis.
-##          
-## Instructions:  
+##
+## Instructions:
 ##      - Source the script into a running R-session:
-##          - RStudio: open file and press 'Source' in the upper right part of the editor window 
+##          - RStudio: open file and press 'Source' in the upper right part of the editor window
 ##          - R-GUI: drag and drop this file into an R-GUI window
-##      - In order to specify your input files and databases the script will invoke two 
+##      - In order to specify your input files and databases the script will invoke two
 ##        Windows file dialogs.
-##      - The first dialog lets you choose a folder containing input files in GTC v1.2 format. 
-##        The script will loop over all gct files in this directory and run ssGSEA on each file 
+##      - The first dialog lets you choose a folder containing input files in GTC v1.2 format.
+##        The script will loop over all gct files in this directory and run ssGSEA on each file
 ##        separately.
-##      - The second dialog window lets the user choose a gene set database such as MSigDB. 
+##      - The second dialog window lets the user choose a gene set database such as MSigDB.
 ##        Some default database can be found in the 'db' subfolder.
 ##      - MAC users: XQuartz is required for invoking file dialogs
-##         
+##
 ################################################################################################################
 rm(list=ls())
 script.dir <- dirname(sys.frame(1)$ofile) ## get folder the script is located in
 os <- Sys.info()['sysname'] ## determine operating system
-if (!require("pacman")) install.packages ("pacman")
+# if (!require("pacman")) install.packages ("pacman")
 
 ## ##########################################################
 ##  define parameters below:
 ## ##########################################################
 
 ## sGSEA / PSEA parameters
-sample.norm.type    = "rank"              ## "rank", "log", "log.rank", "none" 
+sample.norm.type    = "rank"              ## "rank", "log", "log.rank", "none"
 weight              = 0.75                ## value between 0 (no weighting) and 1 (actual data counts)
 statistic           = "area.under.RES"    ## "Kolmogorov-Smirnov"
 output.score.type   = "NES"               ## 'ES' or 'NES'
@@ -39,8 +39,8 @@ min.overlap         = 10                  ## minimal overlap between gene set an
 correl.type         = "z.score"           ## 'rank', 'z.score', 'symm.rank'
 par                 = T                   ## use 'doParallel' package?
 spare.cores         = 1                   ## No. of cores to leave idle
-export.signat.gct   = T                   ## if TRUE gene set GCT files will be exported 
-extended.output     = T                   ## if TRUE the GCT files will contain stats on gene set overlaps etc.   
+export.signat.gct   = T                   ## if TRUE gene set GCT files will be exported
+extended.output     = T                   ## if TRUE the GCT files will contain stats on gene set overlaps etc.
 
 ## #####################################################################
 ##   end paramaters
@@ -57,10 +57,10 @@ while(!gct.dir.ok){
     p_load(tcltk)
     gct.dir <- tclvalue(tkchooseDirectory())
   }
-  
+
   if(length(grep('\\.gct$', dir(gct.dir))) > 0)
     gct.dir.ok=T
-  
+
   if(is.na(gct.dir))
     stop('No folder specified! Aborting.')
   }
@@ -71,12 +71,12 @@ out.dir <- gct.dir
 ## MSigDB
 db.ok=F
 while(!db.ok){
-  
+
   if(os == 'Windows')
     gene.set.databases = choose.files(default = paste( script.dir, 'db/c2.cp.v6.1.symbols.gmt', sep='/' ), caption='Choose gene set database in gmt format. See Broad\'s MSigDB website for details.')
   else
     gene.set.databases = file.choose()
-  
+
   if(length(grep('\\.gmt$', gene.set.databases)) > 0 )
     db.ok=T
   if(length(gene.set.databases)==0)
@@ -149,7 +149,7 @@ for(i in names(gct.files)){
     cat('Running ssSGEA on:', sub('.*/', '', input.ds), '\n\n')
 
     ## run ssGSEA
-    gsea.res <- ssGSEA2(input.ds, gene.set.databases=gene.set.databases, sample.norm.type=sample.norm.type, weight=weight,statistic=statistic, output.score.type = output.score.type, nperm  = nperm, min.overlap  = min.overlap, correl.type = correl.type, output.prefix = paste(i), par=par, 
+    gsea.res <- ssGSEA2(input.ds, gene.set.databases=gene.set.databases, sample.norm.type=sample.norm.type, weight=weight,statistic=statistic, output.score.type = output.score.type, nperm  = nperm, min.overlap  = min.overlap, correl.type = correl.type, output.prefix = paste(i), par=par,
                         spare.cores=spare.cores, param.file=F, export.signat.gct = export.signat.gct, extended.output = extended.output )
 
     ## save object
@@ -163,29 +163,29 @@ for(i in names(gct.files)){
     dups=F
     if(file.exists( sub('\\.gct', '_unique.gct', input.ds)))
       dups <- T
-      
+
     ## input dataset
     if(dups)
        input.ds <-sub('\\.gct', '_unique.gct', input.ds)
-    input.gct <- parse.gctx(input.ds) 
-    
+    input.gct <- parse.gctx(input.ds)
+
     ## gene/site ids
     gn.input <- input.gct@rid
     if(dups)
       gn.input <-  sub('_[0-9]{1,4}$', '', gn.input)
-    
+
     ## sample names
     all.samp <- input.gct@cid
-    
+
     ## expression data only
     input <- input.gct@mat
-   
+
     ## import enrichment scores and p-values
-    gsea.score.gct <- parse.gctx(dir('.', pattern=paste( i, '-scores(_[0-9]*x[0-9*]|)', '.gct', sep=''))) 
+    gsea.score.gct <- parse.gctx(dir('.', pattern=paste( i, '-scores(_[0-9]*x[0-9*]|)', '.gct', sep='')))
     gsea.score <- gsea.score.gct@mat
-    gsea.pval.gct <- parse.gctx(dir('.', pattern=paste( i,  '-fdr-pvalues(_[0-9]*x[0-9*]|)', sep=''))) 
+    gsea.pval.gct <- parse.gctx(dir('.', pattern=paste( i,  '-fdr-pvalues(_[0-9]*x[0-9*]|)', sep='')))
     gsea.pval <- gsea.pval.gct@mat
-    
+
     ## gene set names
     all.gs <- rownames(gsea.score)
 
@@ -194,7 +194,7 @@ for(i in names(gct.files)){
 
     ## create sub-folder
     dir.create('rank-plots')
-    
+
     ## loop over gene sets
     for(gs in 1:length(all.gs)){
 
@@ -289,13 +289,7 @@ for(i in names(gct.files)){
 
     if(length(gct.files) > 1)
         setwd('..')
-  
+
     if(dups)
       file.remove(input.ds)
 }
-
-
-
-
-
-

@@ -5,11 +5,11 @@
 
 
 ## install and load libraries automatically
-if (!require("pacman")) install.packages ("pacman")
-pacman::p_load (rhdf5) 
+# if (!require("pacman")) install.packages ("pacman")
+# pacman::p_load (rhdf5)
 
 # load dependencies
-# library(rhdf5)
+suppressPackageStartupMessages(library(rhdf5))
 
 ## NOTE: If using functions from io.r, SOURCE THIS FILE FIRST
 
@@ -76,7 +76,7 @@ read.gctx.meta <- function(gctx_path, dimension="row", ids=NULL, set_annot_rowna
     field <- fields[i]
     # remove any trailing spaces
     annots[,i] <- gsub("\\s*$", "", raw_annots[[field]], perl=T)
-  } 
+  }
   annots <- fix.datatypes(annots)
   # subset to the provided set of ids, if given
   if (is.null(ids)) {
@@ -187,9 +187,9 @@ setMethod("initialize",
               }
               # read in the next set of headers (column annotations) and shape into a matrix
               if ( nchd > 0 ) {
-                header = scan(src, what = "", nlines = nchd, skip = 3, sep = "\t", 
-                              quote = NULL, quiet = TRUE)		
-                header = matrix(header, nrow = nchd, 
+                header = scan(src, what = "", nlines = nchd, skip = 3, sep = "\t",
+                              quote = NULL, quiet = TRUE)
+                header = matrix(header, nrow = nchd,
                                 ncol = ncmat + nrhd + 1, byrow = TRUE)
                 # extract the column header and column descriptions
                 chd = header[,1]
@@ -203,9 +203,9 @@ setMethod("initialize",
                 cdesc = data.frame()
               }
               # read in the data matrix and row descriptions, shape into a matrix
-              mat = scan(src, what = "", nlines = nrmat, 
+              mat = scan(src, what = "", nlines = nrmat,
                          skip = 3 + nchd, sep = "\t", quote = NULL, quiet = TRUE)
-              mat = matrix(mat, nrow = nrmat, ncol = ncmat + nrhd + col_offset, 
+              mat = matrix(mat, nrow = nrmat, ncol = ncmat + nrhd + col_offset,
                            byrow = TRUE)
               # message(paste(dim(mat), collapse="\t"))
               # Extract the row id's row descriptions, and the data matrix
@@ -240,10 +240,10 @@ setMethod("initialize",
               .Object@cdesc = fix.datatypes(cdesc)
               # add id columns to rdesc and cdesc
               .Object@rdesc$id <- rownames(.Object@rdesc)
-              .Object@cdesc$id <- rownames(.Object@cdesc)                  
+              .Object@cdesc$id <- rownames(.Object@cdesc)
               return(.Object)
             }
-            else { 
+            else {
               # parse the .gctx
               message(paste("reading", src))
               .Object@src = src
@@ -324,13 +324,13 @@ subset.gct <- function (gct, index) {
   gct@mat <- gct@mat [,index]
   gct@cid <- gct@cid [index]
   if (nrow (gct@cdesc) > 0) gct@cdesc <- gct@cdesc [index,]
-  
+
   return (gct)
 }
 
 
 add.cols.gct <- function (gct, dx, dx.annot=NULL) {
-  # returns a gct object with the provided data frame dx added to the original 
+  # returns a gct object with the provided data frame dx added to the original
   # appended to the (end of the ) data matrix
   # if dx.annot is provided it is added as annotation for the samples in dx
   # (else all annotation columns are set to NA)
@@ -346,7 +346,7 @@ add.cols.gct <- function (gct, dx, dx.annot=NULL) {
     gct@cdesc [seq (from=nr+1, length.out=ncol(dx)), 'id'] <- colnames (dx)
     rownames (gct@cdesc) <- gct@cdesc [,'id']
   }
-  
+
   return (gct)
 }
 
@@ -357,7 +357,7 @@ row.subset.gct <- function (gct, index) {
   gct@mat <- gct@mat [index,]
   gct@rid <- gct@rid [index]
   if (nrow (gct@rdesc) > 0) gct@rdesc <- gct@rdesc [index,]
-  
+
   return (gct)
 }
 
@@ -378,7 +378,7 @@ rearrange.gct <- function (gct, index, new.cid=NULL) {
       rownames (gct.cdesc) <- new.cid
     }
   }
-  
+
   return (gct)
 }
 
@@ -394,29 +394,29 @@ write.gct <- function(ds, ofile, precision=5, appenddim=F, ver=NULL) {
   #          version: GCT version string
   #          src: Source filename
   # version is decided based on ds@version unless explicitly specified by ver
-  
-  
+
+
   # append the dimensions of the data set, if desired
   if (appenddim) ofile <- append.dim(ofile, ds@mat, extension="gct")
-  
+
   # detect version (unless specified)
   if (is.null (ver)) ver <- ifelse (ds@version == "#1.3", 3, 2)
-  
+
   precision = floor(precision)
   cat(sprintf('Saving file to %s\n',ofile))
   nr <- nrow(ds@mat)
   nc <- ncol(ds@mat)
   cat(sprintf('Dimensions of matrix: [%dx%d]\n',nr,nc))
   cat(sprintf('Setting precision to %d\n',precision))
-  
-  # open file      
+
+  # open file
   if (ver==3) {
     nrdesc = dim(ds@rdesc)[2]
     ncdesc = dim(ds@cdesc)[2]
     colkeys = colnames(ds@cdesc)
     # append header
     cat(sprintf('#1.%d\n%d\t%d\t%d\t%d', ver, nr, nc, nrdesc, ncdesc),
-        file=ofile,sep='\n')      
+        file=ofile,sep='\n')
     # line 3: sample row desc keys and sample names
     cat(paste(c('id',colnames(ds@rdesc),ds@cid),collapse='\t'),
         file=ofile,sep='\n',append=T)
@@ -427,7 +427,7 @@ write.gct <- function(ds, ofile, precision=5, appenddim=F, ver=NULL) {
         cat(paste(c(colkeys[ii],rep(filler,nrdesc),
                     round(ds@cdesc[,ii],precision)),
                   collapse='\t'),
-            file=ofile,sep='\n',append=T)  
+            file=ofile,sep='\n',append=T)
       } else {
         cat(paste(c(colkeys[ii],rep(filler,nrdesc),
                     ds@cdesc[,ii]),
@@ -435,8 +435,8 @@ write.gct <- function(ds, ofile, precision=5, appenddim=F, ver=NULL) {
             file=ofile,sep='\n',append=T)
       }
     }
-    
-    for (ii in 1:nr) {    
+
+    for (ii in 1:nr) {
       # print rows
       cat(paste(c(ds@rid[ii],
                   ds@rdesc[ii,],
@@ -447,12 +447,12 @@ write.gct <- function(ds, ofile, precision=5, appenddim=F, ver=NULL) {
     # assume ver 1.2 and below, ignore descriptors
     # append header
     cat(sprintf('#1.%d\n%d\t%d', ver, nr, nc),
-        file=ofile,sep='\n')      
+        file=ofile,sep='\n')
     # line 3: sample row desc keys and sample names
     cat(paste(c('id','Description',ds@cid),collapse='\t'),
         file=ofile,sep='\n',append=T)
-    
-    for (ii in 1:nr) {    
+
+    for (ii in 1:nr) {
       # print rows
       cat(paste(c(ds@rid[ii],
                   ds@rdesc[ii, 'Description'],
@@ -460,8 +460,8 @@ write.gct <- function(ds, ofile, precision=5, appenddim=F, ver=NULL) {
           sep='\n',file=ofile,append=T)
     }
   }
-  
-  cat(sprintf('Saved.\n'))  
+
+  cat(sprintf('Saved.\n'))
 }
 
 
@@ -474,10 +474,10 @@ write.gctx <- function(ds, ofile, appenddim=T, compression_level=6, matrix_only=
     file.remove(ofile)
   }
   message(paste("writing", ofile))
-  
+
   # start the file object
   h5createFile(ofile)
-  
+
   # create all the necessary groups
   h5createGroup(ofile, "0")
   h5createGroup(ofile, "0/DATA")
@@ -485,14 +485,14 @@ write.gctx <- function(ds, ofile, appenddim=T, compression_level=6, matrix_only=
   h5createGroup(ofile, "0/META")
   h5createGroup(ofile, "0/META/COL")
   h5createGroup(ofile, "0/META/ROW")
-  
+
   # H5Gcreate(fid, "0")
   # H5Gcreate(fid, "0/DATA")
   # H5Gcreate(fid, "0/DATA/0")
   # H5Gcreate(fid, "0/META")
   # H5Gcreate(fid, "0/META/COL")
   # H5Gcreate(fid, "0/META/ROW")
-  
+
   # create and write matrix data, using
   # chunking if dimensions exceed 1000
   # assume values are 32 bit (4 bytes each), so we can fit 1024 / 4 = 256 values in 1 KB (1024 bytes)
@@ -500,28 +500,28 @@ write.gctx <- function(ds, ofile, appenddim=T, compression_level=6, matrix_only=
   # column chunk, such that row * col <= 1024
   # should play with these values
   col_chunk_size <- min(floor(1024 / row_chunk_size), ncol(ds@mat))
-  chunking <- c(row_chunk_size, col_chunk_size) 
+  chunking <- c(row_chunk_size, col_chunk_size)
   message(paste(c("chunk sizes:", chunking), collapse="\t"))
   h5createDataset(ofile, "0/DATA/0/matrix", dim(ds@mat), chunk=chunking, level=compression_level)
   h5write(ds@mat, ofile, "0/DATA/0/matrix")
-  
+
   # write annotations
   h5write(ds@rid, ofile, "0/META/ROW/id")
   h5write(ds@cid, ofile, "0/META/COL/id")
-  
+
   if (!matrix_only) {
     write.meta(ofile, ds@cdesc, dimension="column")
     write.meta(ofile, ds@rdesc, dimension="row")
   }
-  
+
   # close any open handles
   H5close()
-  
+
   # add the version annotation and close
   fid <- H5Fopen(ofile)
   h5writeAttribute("GCTX1.0", fid, "version")
   H5close()
-  
+
 }
 
 
@@ -566,7 +566,7 @@ write.grp <- function(vals, fname) {
 
 ### function to read a .gmx file and return a list ###
 parse.gmx <- function(fname) {
-  tmp <- read.table(fname, sep = "\t", 
+  tmp <- read.table(fname, sep = "\t",
                     header = TRUE, stringsAsFactors = FALSE)
   # preallocate a list for the gmx
   L <- list()
@@ -578,8 +578,8 @@ parse.gmx <- function(fname) {
     values <- values[!remove.idx]
     # put in a list
     L[[n]] <- list(head = n,
-                   desc = tmp[[n]][1], 
-                   len = length(values), 
+                   desc = tmp[[n]][1],
+                   len = length(values),
                    entry = values)
   }
   return(L)
@@ -630,7 +630,7 @@ write.gmt <- function(lst, fname) {
 
 ### function to write tab-delimited text files ###
 write.tbl <- function(tbl, ofile, col.names = TRUE, row.names = FALSE) {
-  write.table(tbl, file = ofile, sep = "\t", quote = FALSE, 
+  write.table(tbl, file = ofile, sep = "\t", quote = FALSE,
               col.names = col.names, row.names = row.names)
 }
 

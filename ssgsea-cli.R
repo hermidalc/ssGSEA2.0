@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 options( warn = -1 )
 
-suppressPackageStartupMessages( if(!require("pacman")) install.packages ("pacman") )
-suppressPackageStartupMessages(p_load("optparse"))
+# suppressPackageStartupMessages( if(!require("pacman")) install.packages ("pacman") )
+suppressPackageStartupMessages(library("optparse"))
 
 # parse the directory this file is located
 this.file.dir <- commandArgs()[4]
@@ -62,6 +62,3 @@ res <- ssGSEA2(
   spare.cores=spare.cores,
   log.file=log.file
 )
-
-
-
